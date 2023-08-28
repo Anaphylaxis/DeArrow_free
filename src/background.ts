@@ -23,7 +23,7 @@ waitFor(() => Config.isReady()).then(() => {
                 if (isAllowedAccess && !Config.config!.lastIncognitoStatus) {
                     registerNeededContentScripts(undefined, true).catch(logError);
                 }
-    
+
                 Config.config!.lastIncognitoStatus = isAllowedAccess;
             });
         }
@@ -36,11 +36,11 @@ waitFor(() => Config.isReady()).then(() => {
     if (!Config.config!.userID) {
         const setupUserID = async () => {
             const userID = Config.config!.userID;
-    
+
             // If there is no userID, then it is the first install.
-            if (!userID){
+            if (!userID) {
                 const groupPolicyLicenseKey = await getGroupPolicyLicenseKey();
-                const paywallEnabled = !CompileConfig["freeAccess"]
+                const paywallEnabled = false
                     && !navigator.userAgent.includes("Mobile;")
                     && await isPaywallEnabled()
                     && !groupPolicyLicenseKey
@@ -58,15 +58,15 @@ waitFor(() => Config.isReady()).then(() => {
                 if (CompileConfig["freeAccess"]) {
                     Config.config!.freeActivation = false;
                 }
-    
+
                 registerNeededContentScripts().catch(logError);
-    
+
                 // First check for config from SponsorBlock extension
                 const sponsorBlockConfig = await Promise.race([
                     new Promise((resolve) => setTimeout(resolve, 1000)),
                     new Promise((resolve) => {
                         const extensionIds = getExtensionIdsToImportFrom();
-                        
+
                         for (const id of extensionIds) {
                             chrome.runtime.sendMessage(id, { message: "requestConfig" }, (response) => {
                                 if (response) {
@@ -76,7 +76,7 @@ waitFor(() => Config.isReady()).then(() => {
                         }
                     })
                 ]);
-    
+
                 if (sponsorBlockConfig) {
                     Config.config!.userID = sponsorBlockConfig["userID"];
                     Config.config!.allowExpirements = sponsorBlockConfig["allowExpirements"];
@@ -85,22 +85,22 @@ waitFor(() => Config.isReady()).then(() => {
                     Config.config!.darkMode = sponsorBlockConfig["darkMode"];
                     Config.config!.importedConfig = true;
                 }
-                
+
                 if (!Config.config!.userID) {
                     const newUserID = generateUserID();
                     Config.config!.userID = newUserID;
                 }
-    
+
                 Config.config!.showInfoAboutRandomThumbnails = true;
-    
+
                 if (paywallEnabled) {
-                    setTimeout(() => void chrome.tabs.create({url: chrome.runtime.getURL("/payment.html")}), 100);
+                    setTimeout(() => void chrome.tabs.create({ url: chrome.runtime.getURL("/payment.html") }), 100);
                 } else if (!groupPolicyLicenseKey) {
-                    setTimeout(() => void chrome.tabs.create({url: chrome.runtime.getURL("/help.html")}), 100);
+                    setTimeout(() => void chrome.tabs.create({ url: chrome.runtime.getURL("/help.html") }), 100);
                 }
             }
         };
-    
+
         if (isFirefoxOrSafari() && !isSafari()) {
             // This let's the config sync to run fully before checking.
             // This is required on Firefox
@@ -142,16 +142,16 @@ async function getGroupPolicyLicenseKey(): Promise<string | null> {
 
 const existingRegistrations: { id: string; script: browser.contentScripts.RegisteredContentScript }[] = [];
 
-chrome.runtime.onMessage.addListener((request, _, sendResponse) =>  {
-    switch(request.message) {
+chrome.runtime.onMessage.addListener((request, _, sendResponse) => {
+    switch (request.message) {
         case "openConfig":
-            void chrome.tabs.create({url: chrome.runtime.getURL('options/options.html' + (request.hash ? '#' + request.hash : ''))});
+            void chrome.tabs.create({ url: chrome.runtime.getURL('options/options.html' + (request.hash ? '#' + request.hash : '')) });
             return false;
         case "openHelp":
-            void chrome.tabs.create({url: chrome.runtime.getURL('help.html')});
+            void chrome.tabs.create({ url: chrome.runtime.getURL('help.html') });
             return false;
         case "openPayment":
-            void chrome.tabs.create({url: chrome.runtime.getURL('payment.html')});
+            void chrome.tabs.create({ url: chrome.runtime.getURL('payment.html') });
             return false;
         case "registerNeededContentScripts":
             registerNeededContentScripts(request.activated).then(sendResponse).catch(sendResponse);
@@ -181,7 +181,7 @@ function onFreeTrialComplete() {
     if (!freeTrialActive() && !isActivated()) {
         Config.config!.freeTrialEnded = true;
 
-        void chrome.tabs.create({url: chrome.runtime.getURL('payment.html')});
+        void chrome.tabs.create({ url: chrome.runtime.getURL('payment.html') });
 
         registerNeededContentScripts().catch(logError);
     }
@@ -196,7 +196,7 @@ function onFreeAccessRequestComplete() {
 
     registerNeededContentScripts().catch(logError);
 
-    setTimeout(() => void chrome.tabs.create({url: chrome.runtime.getURL('help.html')}), 1000);
+    setTimeout(() => void chrome.tabs.create({ url: chrome.runtime.getURL('help.html') }), 1000);
 }
 
 function getExtensionIdsToImportFrom(): string[] {
@@ -221,8 +221,8 @@ async function registerNeededContentScripts(activated?: boolean, forceUpdate?: b
     if (isSafari()) return;
 
     const contentScripts = getContentScripts(activated);
-    if ("scripting" in chrome && "getRegisteredContentScripts" in chrome.scripting 
-            && isPersistentContentScriptSupported()) {
+    if ("scripting" in chrome && "getRegisteredContentScripts" in chrome.scripting
+        && isPersistentContentScriptSupported()) {
         Config.config!.firefoxOldContentScriptRegistration = false;
 
         const existingRegistration = await chromeP.scripting.getRegisteredContentScripts();
@@ -259,7 +259,7 @@ async function registerNeededContentScripts(activated?: boolean, forceUpdate?: b
         }
     } else {
         Config.config!.firefoxOldContentScriptRegistration = true;
-        
+
         if (existingRegistrations.length > 0) {
             const registrationsToRemove = existingRegistrations
                 .filter((script) => forceUpdate || !contentScripts.some((newScript) => newScript.id === script.id));
@@ -279,8 +279,8 @@ async function registerNeededContentScripts(activated?: boolean, forceUpdate?: b
                         runAt: script.runAt,
                         matches: script.matches,
                         allFrames: script.allFrames,
-                        js: script.js?.map?.(js => ({file: js})),
-                        css: script.css?.map?.(css => ({file: css})),
+                        js: script.js?.map?.(js => ({ file: js })),
+                        css: script.css?.map?.(css => ({ file: css })),
                     })
                 });
 
