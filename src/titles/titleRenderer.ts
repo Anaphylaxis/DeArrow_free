@@ -265,6 +265,7 @@ function createTitleElement(element: HTMLElement, originalTitleElement: HTMLElem
         titleElement.parentElement!.style.display = "flex";
         titleElement.parentElement!.style.alignItems = "flex-start";
         if (onMobile()) titleElement.parentElement!.style.alignItems = "normal";
+        if (brandingLocation === BrandingLocation.Endcards) titleElement.parentElement!.style.alignItems = "center";
         titleElement.parentElement!.style.justifyContent = "space-between";
         titleElement.parentElement!.style.width = "100%";
 
@@ -402,10 +403,7 @@ async function createShowOriginalButton(originalTitleElement: HTMLElement,
         document.querySelector("ytd-video-preview #player-container") as HTMLElement
     ];
 
-    buttonElement.addEventListener("click", (e) => void (async (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-
+    const toggleDetails = async () => {
         const videoID = buttonElement.getAttribute("videoID");
         if (videoID) {
             await toggleShowCustom(videoID as VideoID);
@@ -421,7 +419,28 @@ async function createShowOriginalButton(originalTitleElement: HTMLElement,
                 }
             }
         }
+    }
+
+    buttonElement.addEventListener("click", (e) => void (async (e) => {
+        if (!Config.config!.showOriginalOnHover) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            await toggleDetails();
+        }
     })(e));
+
+    buttonElement.addEventListener("mouseenter", () => void (async () => {
+        if (Config.config!.showOriginalOnHover) {
+            await toggleDetails();
+        }
+    })());
+
+    buttonElement.addEventListener("mouseleave", () => void (async () => {
+        if (Config.config!.showOriginalOnHover) {
+            await toggleDetails();
+        }
+    })());
 
     if (originalTitleElement.parentElement) {
         originalTitleElement.parentElement.addEventListener("mouseleave", () => {

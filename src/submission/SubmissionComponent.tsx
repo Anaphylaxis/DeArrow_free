@@ -21,7 +21,6 @@ import ExclamationIcon from "../svgIcons/exclamationIcon";
 import CursorIcon from "../svgIcons/cursorIcon";
 import FontIcon from "../svgIcons/fontIcon";
 import { Tooltip } from "../utils/tooltip";
-import { freeTrialActive } from "../license/license";
 import { LicenseComponent } from "../license/LicenseComponent";
 
 export interface SubmissionComponentProps {
@@ -234,10 +233,10 @@ export const SubmissionComponent = (props: SubmissionComponentProps) => {
 
             <div className="cbVoteButtonContainer">
                 <button className="cbNoticeButton cbVoteButton" 
-                    disabled={freeTrialActive()
+                    disabled={!Config.config!.activated
                                 || currentlySubmitting 
                                 || (!selectedThumbnail.current && !selectedTitle) 
-                                || (!!selectedTitle && selectedTitle.title === chrome.i18n.getMessage("OriginalTitle"))}
+                                || (!!selectedTitle && selectedTitle.title.toLowerCase() === chrome.i18n.getMessage("OriginalTitle").toLowerCase())}
                     onClick={async () => {
                         setCurrentlySubmitting(true);
 

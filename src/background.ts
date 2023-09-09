@@ -44,7 +44,8 @@ waitFor(() => Config.isReady()).then(() => {
                     && !navigator.userAgent.includes("Mobile;")
                     && await isPaywallEnabled()
                     && !groupPolicyLicenseKey
-                    && !Config.config!.licenseKey;
+                    && !Config.config!.licenseKey
+                    && !Config.config!.alreadyActivated;
                 if (paywallEnabled) {
                     Config.config!.activated = false;
                     Config.config!.showActivatedMessage = true;

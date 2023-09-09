@@ -11,6 +11,7 @@ interface PaymentComponentChoices {
     freeTrial?: boolean;
     licenseKey?: string;
     freeAccess?: boolean;
+    freeAccessWaitingPeriod? : number;
 }
 
 enum PaymentResultMessageType {
@@ -18,8 +19,20 @@ enum PaymentResultMessageType {
     FreeAccess
 }
 
+let openedTab = false;
 waitFor(() => Config.isReady()).then(() => {
-    if (Config.config!.activated) {
+    if (Config.config!.activated && !openedTab) {
+        openedTab = true;
+        chrome.runtime.sendMessage({ "message": "openHelp" }, () => window.close());
+    }
+});
+
+Config.configSyncListeners.push((changes) => {
+    if (!openedTab && ((changes.activated && changes.activated.newValue)
+        || (changes.alreadyActivated && changes.alreadyActivated.newValue))) {
+        Config.config!.activated = true;
+        openedTab = true;
+
         chrome.runtime.sendMessage({ "message": "openHelp" }, () => window.close());
     }
 });
@@ -50,6 +63,10 @@ export const PaymentComponent = () => {
 
         if (choices.freeAccess) {
             Config.config!.freeAccessRequestStart = Date.now();
+
+            if (choices.freeAccessWaitingPeriod) {
+                Config.config!.freeAccessWaitingPeriod = choices.freeAccessWaitingPeriod;
+            }
         }
 
         if (validLicenseKey) {
@@ -71,7 +88,8 @@ export const PaymentComponent = () => {
             setTimeout(() => void askBackgroundToSetupAlarms(), 2000);
         }
 
-        if (validLicenseKey) {
+        if (validLicenseKey && !openedTab) {
+            openedTab = true;
             chrome.runtime.sendMessage({ "message": "openHelp" }, () => window.close());
         }
     }
@@ -218,7 +236,7 @@ export const PaymentComponent = () => {
 
 async function shouldAllowLicenseKey(licenseKey: string): Promise<boolean> {
     try {
-        const result = await sendRequestToServer("GET", `${websiteDomain}/api/verifyToken`, {
+        const result = await sendRequestToServer("GET", `/api/verifyToken`, {
             licenseKey: licenseKey
         });
 

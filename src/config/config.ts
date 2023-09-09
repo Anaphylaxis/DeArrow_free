@@ -82,6 +82,7 @@ interface SBConfig {
     extensionEnabled: boolean;
     defaultToCustom: boolean;
     alwaysShowShowOriginalButton: boolean;
+    showOriginalOnHover: boolean;
     importedConfig: boolean;
     replaceTitles: boolean;
     replaceThumbnails: boolean;
@@ -96,10 +97,12 @@ interface SBConfig {
     thumbnailReplacements: number;
     licenseKey: string | null;
     activated: boolean;
+    alreadyActivated: boolean;
     freeActivation: boolean;
     freeTrialStart: number | null;
     freeTrialEnded: boolean;
     freeAccessRequestStart: number | null;
+    freeAccessWaitingPeriod: number;
     firefoxOldContentScriptRegistration: boolean;
     lastIncognitoStatus: boolean;
     showActivatedMessage: boolean;
@@ -155,6 +158,7 @@ const syncDefaults = {
     extensionEnabled: true,
     defaultToCustom: true,
     alwaysShowShowOriginalButton: false,
+    showOriginalOnHover: false,
     importedConfig: false,
     replaceTitles: true,
     replaceThumbnails: true,
@@ -169,10 +173,12 @@ const syncDefaults = {
     thumbnailReplacements: 0,
     licenseKey: null,
     activated: true,
+    alreadyActivated: false,
     freeActivation: true,
     freeTrialStart: null,
     freeTrialEnded: false,
     freeAccessRequestStart: null,
+    freeAccessWaitingPeriod: 1000 * 60 * 60 * 24 * 3,
     firefoxOldContentScriptRegistration: false,
     lastIncognitoStatus: false,
     showActivatedMessage: false,
