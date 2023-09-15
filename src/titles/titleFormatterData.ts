@@ -168,5 +168,7 @@ export const acronymBlocklist = new Set([
     "two",
     "six",
     "ten",
-    "can"
+    "can",
+    "pro",
+    "why"
 ]);
