@@ -95,6 +95,10 @@ async function getTimestampFromRandomTime(videoID: VideoID, brandingData: Brandi
                 }
 
                 brandingData.randomTime = alea(videoID)();
+                // Don't allow random times past 90% of the video, only gets here if there were no segments
+                if (brandingData.randomTime > 0.9) {
+                    brandingData.randomTime -= 0.9;
+                }
             }
 
             const timestamp = brandingData.randomTime * videoDuration;
@@ -341,7 +345,7 @@ async function fetchBrandingFromThumbnailCache(videoID: VideoID, time?: number, 
                         return null;
                     }
     
-                    await setupPreRenderedThumbnail(videoID, timestamp, await request.blob());
+                    setupPreRenderedThumbnail(videoID, timestamp, await request.blob());
                     delete activeThumbnailCacheRequests[videoID];
     
                     return {

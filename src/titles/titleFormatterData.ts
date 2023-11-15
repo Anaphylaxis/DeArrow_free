@@ -16,8 +16,6 @@ export const titleCaseNotCapitalized = new Set([
     "to",
     "from",
     "into",
-    "like",
-    "over",
     "with",
     "w/",
     "upon",
@@ -34,6 +32,11 @@ export const titleCaseNotCapitalized = new Set([
     "feat.",
     "etc.",
     "etc"
+]);
+
+export const titleCaseDetectionNotCapitalized = new Set([
+    ...titleCaseNotCapitalized,
+    "it"
 ]);
 
 export const allowlistedWords = new Set([
@@ -144,6 +147,46 @@ export const allowlistedWords = new Set([
     "XVI",
     "XVII",
     "XVIII",
+    "VIA",
+    "CCCP",
+    "DIY",
+    "SNES",
+    "INTV",
+    "PICO-8",
+    "PICO8",
+    "WSWAN",
+    "PCE",
+    "PCECD",
+    "FPGA",
+    "GTA",
+    "bell hooks",
+    "TOOOL",
+    "PCECD",
+    "drawholic",
+    "TF2",
+    "L4D",
+    "L4D2",
+    "P/ECE",
+    "CDROM",
+    "CD-ROM",
+    "EFF",
+    "AAA",
+    "IQ",
+    "GEEKOM",
+    "AI",
+    "RVC",
+    "DisplayPort",
+    "BFDI",
+    "BFDIA",
+    "IDFB",
+    "TPOT",
+    "WWII",
+    "CS2",
+    "CS:GO",
+    "CSGO",
+    "SCART",
+    "ASMR",
+    "CNBC"
 ]);
 
 export const acronymBlocklist = new Set([
@@ -170,5 +213,15 @@ export const acronymBlocklist = new Set([
     "ten",
     "can",
     "pro",
-    "why"
+    "why",
+    "did",
+    "now",
+    "too"
+]);
+
+export const notStartOfSentence = new Set([
+    "v.s.",
+    "vs.",
+    "ft.",
+    "feat."
 ]);

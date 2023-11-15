@@ -17,6 +17,12 @@
     object-fit: cover;
 }
 
+/* Used to fix tooltips having the wrong offset since image is still displayed when YouTube calculates it's offset */
+/* Since tooltips have multiple uses, it becomes the play button tooltip */
+.ytp-tooltip:not(.ytp-text-detail) .cbCustomThumbnailCanvas {
+    display: none;
+}
+
 .cbThumbnail {
     position: relative;
     flex: 0 0 20%;
@@ -272,6 +278,12 @@ ytd-compact-playlist-renderer .ytd-compact-playlist-renderer #video-title:not(.c
 
 }
 
+.cbNotice {
+    text-align: center;
+    margin-bottom: 5px;
+	font-size: 1.3em;
+}
+
 .cbVoteButtonContainer, .cbHelpButtonContainer {
     display: flex;
     justify-content: space-evenly;
@@ -506,4 +518,10 @@ ytd-compact-radio-renderer ytd-badge-supported-renderer, ytd-grid-movie-renderer
 
 .thumbnailNoBackground::before {
     background-color: transparent !important;
+}
+
+/* These now have a "mix" image in the background, so need a background */
+.thumbnailNoBackground ytd-playlist-video-thumbnail-renderer {
+    background-color: black;
+    border-radius: var(--yt-img-border-radius, none);
 }

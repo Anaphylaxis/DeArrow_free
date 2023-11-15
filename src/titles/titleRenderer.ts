@@ -212,6 +212,7 @@ function getTitleSelector(brandingLocation: BrandingLocation): string[] {
         case BrandingLocation.Related:
             return [
                 "#video-title",
+                "#movie-title", // Movies in related
                 ".details .media-item-headline .yt-core-attributed-string", // Mobile YouTube
                 ".reel-item-metadata h3 .yt-core-attributed-string", // Mobile YouTube Shorts
                 ".details > .yt-core-attributed-string", // Mobile YouTube Channel Feature
@@ -228,6 +229,11 @@ function getTitleSelector(brandingLocation: BrandingLocation): string[] {
             return [".ytp-videowall-still-info-title"];
         case BrandingLocation.EmbedSuggestions:
             return [".ytp-suggestion-title"];
+        case  BrandingLocation.UpNextPreview:
+            return [
+                ".ytp-tooltip-text-no-title",
+                ".ytp-tooltip-text"
+            ];
         default:
             throw new Error("Invalid branding location");
     }
@@ -248,7 +254,8 @@ function createTitleElement(element: HTMLElement, originalTitleElement: HTMLElem
 
     if (brandingLocation === BrandingLocation.EndRecommendations
             || brandingLocation === BrandingLocation.Autoplay
-            || brandingLocation === BrandingLocation.EmbedSuggestions) {
+            || brandingLocation === BrandingLocation.EmbedSuggestions
+            || originalTitleElement.id === "movie-title") {
         const container = document.createElement("div");
         container.appendChild(titleElement);
         originalTitleElement.parentElement?.prepend(container);
@@ -267,18 +274,22 @@ function createTitleElement(element: HTMLElement, originalTitleElement: HTMLElem
         const smallBrandingBox = !!titleElement.closest("ytd-grid-video-renderer");
 
         // To be able to show the show original button in the right place
-        titleElement.parentElement!.style.display = "flex";
-        titleElement.parentElement!.style.alignItems = "flex-start";
-        if (onMobile()) titleElement.parentElement!.style.alignItems = "normal";
-        if (brandingLocation === BrandingLocation.Endcards) titleElement.parentElement!.style.alignItems = "center";
-        titleElement.parentElement!.style.justifyContent = "space-between";
-        titleElement.parentElement!.style.width = "100%";
+        if (brandingLocation !== BrandingLocation.UpNextPreview) {
+            titleElement.parentElement!.style.display = "flex";
+            titleElement.parentElement!.style.alignItems = "flex-start";
+            if (onMobile()) titleElement.parentElement!.style.alignItems = "normal";
+            titleElement.parentElement!.style.justifyContent = "space-between";
+            titleElement.parentElement!.style.width = "100%";
+        }
 
         if (brandingLocation === BrandingLocation.Related) {
             // Move badges out of centered div
             const badges = titleElement.parentElement!.querySelectorAll("ytd-badge-supported-renderer");
             for (const badge of badges) {
-                badge.parentElement!.parentElement!.prepend(badge);
+                let parent = badge.parentElement!.parentElement!;
+                if (parent.id === "title-wrapper") parent = parent.parentElement!;
+
+                parent.prepend(badge);
             }
         }
 
@@ -369,6 +380,10 @@ export async function findOrCreateShowOriginalButton(element: HTMLElement, brand
 
     buttonElement.setAttribute("videoID", videoID);
     buttonElement.style.removeProperty("display");
+
+    if (brandingLocation === BrandingLocation.UpNextPreview) {
+        buttonElement.style.setProperty("display", "none", "important");
+    }
     return buttonElement;
 }
 
@@ -476,9 +491,14 @@ async function createShowOriginalButton(originalTitleElement: HTMLElement,
 
         referenceNode?.prepend?.(buttonElement);
     } else {
-        const lineHeight = getComputedStyle(originalTitleElement).lineHeight;
+        const originalStyle = getComputedStyle(originalTitleElement);
+        const lineHeight = originalStyle.lineHeight;
         if (lineHeight) {
             buttonElement.style.height = lineHeight;
+        }
+
+        if (brandingLocation === BrandingLocation.Endcards) {
+            buttonElement.style.margin = originalStyle.margin;
         }
 
         // Verify again it doesn't already exist

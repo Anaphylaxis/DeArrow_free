@@ -42,6 +42,8 @@ waitFor(() => Config.isReady()).then(() => {
                 const groupPolicyLicenseKey = await getGroupPolicyLicenseKey();
                 const paywallEnabled = false
                     && !navigator.userAgent.includes("Mobile;")
+                    && !navigator.userAgent.includes("iPhone;")
+                    && !navigator.userAgent.includes("iPad;")
                     && await isPaywallEnabled()
                     && !groupPolicyLicenseKey
                     && !Config.config!.licenseKey

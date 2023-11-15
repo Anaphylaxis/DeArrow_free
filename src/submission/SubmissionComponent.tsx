@@ -123,6 +123,9 @@ export const SubmissionComponent = (props: SubmissionComponentProps) => {
     };
     const titleChangeListener = React.useRef<() => void>(() => videoChangeListener());
 
+    // Used to warn submitter to maybe not submit the original thumbnail
+    const isAbTestedThumbnail = React.useRef<boolean | null>(null);
+
     React.useEffect(() => {
         if (titleChangeListener.current) {
             removeTitleChangeListener(titleChangeListener.current);
@@ -193,6 +196,10 @@ export const SubmissionComponent = (props: SubmissionComponentProps) => {
                             }
                         }
 
+                        if (t.original) {
+                            handleAbTestedThumbnailWarning(props.videoID, isAbTestedThumbnail).catch(logError);
+                        }
+
                         setSelectedThumbnailIndex(selectedIndex);
                         selectedThumbnail.current = t;
                     }}></ThumbnailDrawerComponent>
@@ -255,6 +262,13 @@ export const SubmissionComponent = (props: SubmissionComponentProps) => {
             </div>
 
             {
+                !Config.config!.activated &&
+                <div className="cbNotice">
+                    {`${chrome.i18n.getMessage("youCannotVoteDuringTrial")}`}
+                </div>
+            }
+
+            {
                 Config.config!.showGuidelineHelp ? 
                 <>
                     <hr className="cbLine"/>
@@ -262,8 +276,6 @@ export const SubmissionComponent = (props: SubmissionComponentProps) => {
                     <div className="cbHelpContainer">
                         {getTips()}
                     </div>
-
-                    <YourWorkComponent/>
 
                     <div className="cbHelpButtonContainer">
                         <a className="cbNoticeButton"
@@ -285,6 +297,8 @@ export const SubmissionComponent = (props: SubmissionComponentProps) => {
                         </a>
                     </div>
 
+                    <YourWorkComponent/>
+
                     <LicenseComponent/>
                 </>
                 : null
@@ -294,6 +308,17 @@ export const SubmissionComponent = (props: SubmissionComponentProps) => {
         </div>
     );
 };
+
+async function handleAbTestedThumbnailWarning(videoID: string, isAbTestedThumbnail: React.MutableRefObject<boolean | null>) {
+    if (isAbTestedThumbnail.current === null) {
+        const request = await fetch(`https://i.ytimg.com/vi/${videoID}/mqdefault_custom_1.jpg`);
+        isAbTestedThumbnail.current = request.ok;
+    }
+
+    if (isAbTestedThumbnail.current) {
+        alert(chrome.i18n.getMessage("abThumbnailsWarning"));
+    }
+}
 
 function updateUnsubmitted(unsubmitted: UnsubmittedSubmission,
         setExtraUnsubmittedThumbnails: React.Dispatch<React.SetStateAction<RenderedThumbnailSubmission[]>>,

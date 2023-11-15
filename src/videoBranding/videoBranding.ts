@@ -30,7 +30,8 @@ export enum BrandingLocation {
     Endcards,
     Autoplay,
     EndRecommendations,
-    EmbedSuggestions
+    EmbedSuggestions,
+    UpNextPreview
 }
 
 export type ShowCustomBrandingInfo = {
@@ -48,7 +49,7 @@ export interface VideoBrandingInstance {
 }
 
 export const brandingBoxSelector = !onMobile() 
-    ? "ytd-rich-grid-media, ytd-video-renderer, ytd-compact-video-renderer, ytd-compact-radio-renderer, ytd-compact-movie-renderer, ytd-playlist-video-renderer, ytd-playlist-panel-video-renderer, ytd-grid-video-renderer, ytd-grid-movie-renderer, ytd-rich-grid-slim-media, ytd-radio-renderer, ytd-reel-item-renderer, ytd-compact-playlist-renderer, ytd-playlist-renderer, ytd-grid-playlist-renderer, ytd-grid-show-renderer"
+    ? "ytd-rich-grid-media, ytd-video-renderer, ytd-movie-renderer, ytd-compact-video-renderer, ytd-compact-radio-renderer, ytd-compact-movie-renderer, ytd-playlist-video-renderer, ytd-playlist-panel-video-renderer, ytd-grid-video-renderer, ytd-grid-movie-renderer, ytd-rich-grid-slim-media, ytd-radio-renderer, ytd-reel-item-renderer, ytd-compact-playlist-renderer, ytd-playlist-renderer, ytd-grid-playlist-renderer, ytd-grid-show-renderer"
     : "ytm-video-with-context-renderer, ytm-compact-radio-renderer, ytm-reel-item-renderer, ytm-channel-featured-video-renderer, ytm-compact-video-renderer, ytm-playlist-video-renderer, .playlist-immersive-header-content, ytm-compact-playlist-renderer, ytm-video-card-renderer, ytm-vertical-list-renderer, ytm-playlist-panel-video-renderer";
 
 export const watchPageThumbnailSelector = ".ytp-cued-thumbnail-overlay";
@@ -154,6 +155,7 @@ export async function replaceVideoCardBranding(element: HTMLElement, brandingLoc
     if (link) {
         const videoID = await extractVideoID(link);
         const isPlaylistOrClipTitleStatus = isPlaylistOrClipTitle(link);
+        const isMovie = element.nodeName.includes("MOVIE");
 
         if (verifyVideoID && videoID !== verifyVideoID) {
             // Don't need this branding update anymore, it was trying to update for a different video
@@ -164,7 +166,10 @@ export async function replaceVideoCardBranding(element: HTMLElement, brandingLoc
             async () => { await replaceVideoCardBranding(element, brandingLocation, videoID); });
         const showCustomBranding = videoBrandingInstance.showCustomBranding;
 
-        const videoPromise = replaceThumbnail(element, videoID, brandingLocation, showCustomBranding);
+        const videoPromise = replaceThumbnail(element, videoID, brandingLocation, isMovie ? {
+            knownValue: false,
+            originalValue: false
+        } : showCustomBranding);
         const titlePromise = !isPlaylistOrClipTitleStatus 
             ? replaceTitle(element, videoID, showCustomBranding, brandingLocation) 
             : Promise.resolve(false);
@@ -216,8 +221,8 @@ export function getLinkElement(element: HTMLElement, brandingLocation: BrandingL
         case BrandingLocation.Autoplay:
             return element.querySelector("a.ytp-autonav-endscreen-link-container") as HTMLAnchorElement;
         case BrandingLocation.EndRecommendations:
-            return element as HTMLAnchorElement;
         case BrandingLocation.EmbedSuggestions:
+        case BrandingLocation.UpNextPreview:
             return element as HTMLAnchorElement;
         default:
             throw new Error("Invalid branding location");
@@ -229,17 +234,25 @@ async function extractVideoID(link: HTMLAnchorElement) {
     let videoID = (videoIDRegex?.[1] || videoIDRegex?.[2]) as VideoID;
 
     if (!videoID) {
-        const image = link.querySelector("yt-image img, img.video-thumbnail-img") as HTMLImageElement;
-        if (image) {
-            let href = image.getAttribute("src");
-            if (!href) {
-                // wait source to be setup
-                await waitForImageSrc(image);
-                href = image.getAttribute("src");
-            }
-
+        const imgBackground = link.querySelector(".ytp-tooltip-bg") as HTMLElement;
+        if (imgBackground) {
+            const href = imgBackground.style.backgroundImage?.match(/url\("(.+)"\)/)?.[1];
             if (href) {
                 videoID = href.match(/\/vi\/(\S{11})/)?.[1] as VideoID;
+            }
+        } else {
+            const image = link.querySelector("yt-image img, img.video-thumbnail-img") as HTMLImageElement;
+            if (image) {
+                let href = image.getAttribute("src");
+                if (!href) {
+                    // wait source to be setup
+                    await waitForImageSrc(image);
+                    href = image.getAttribute("src");
+                }
+    
+                if (href) {
+                    videoID = href.match(/\/vi\/(\S{11})/)?.[1] as VideoID;
+                }
             }
         }
     }
@@ -396,9 +409,11 @@ export function setupOptionChangeListener(): void {
             "titleFormatting",
             "shouldCleanEmojis",
             "thumbnailFallback",
+            "thumbnailFallbackAutogenerated",
             "alwaysShowShowOriginalButton",
             "channelOverrides",
-            "showIconForFormattedTitles"
+            "showIconForFormattedTitles",
+            "ignoreAbThumbnails"
         ];
 
         if (settingsToReload.some((name) => (changes[name] && changes[name].newValue !== changes[name].oldValue))) {
